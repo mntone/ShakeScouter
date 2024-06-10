@@ -1,0 +1,48 @@
+{
+	"root_dir": "../.dev/",
+	"items": [
+		{
+			"filename": "counts/count{}.png",
+			"range": {
+				"start": 0,
+				"stop": 100
+			},
+			"timer": "range"
+		},
+		{
+			"filename": "counts/count0.png",
+			"amount": 32,
+			"quota": 26
+		},
+		{
+			"filename": "counts/count7.png",
+			"amount": 26,
+			"quota": 26
+		},
+		{
+			"filename": "counts/count28.png",
+			"amount": 20,
+			"quota": 26
+		},
+		{
+			"filename": "other/digit00.png",
+			"amount": 15,
+			"quota": 33
+		},
+		{
+			"filename": "other/digit01.png",
+			"amount": 32,
+			"quota": 30
+		},
+		{
+			"filename": "other/digit02.png",
+			"amount": 43,
+			"quota": 35
+		},
+		{
+			"filename": "other/digit03.jpg",
+			"amount": 50,
+			"quota": 29
+		}
+	]
+}

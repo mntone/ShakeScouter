@@ -1,0 +1,100 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Dataset Definitions",
+	"type": "object",
+	"properties": {
+		"root_dir": {
+			"title": "Root Directory for Dataset Assets",
+			"type": "string",
+			"minLength": 1
+		},
+		"items": {
+			"title": "Array of Assets",
+			"type": "array",
+			"items": {
+				"title": "Asset",
+				"type": "object",
+				"properties": {
+					"filename": {
+						"title": "Filename for Asset",
+						"type": "string",
+						"minLength": 1,
+						"default": ".png",
+						"pattern": ".(bmp|gif|jpg|png)$"
+					},
+					"range": {
+						"title": "Index Range",
+						"type": "object",
+						"properties": {
+							"start": {
+								"title": "Start Index",
+								"type": "number",
+								"minimum": 0,
+								"default": 0
+							},
+							"stop": {
+								"title": "Stop Index",
+								"type": "number",
+								"minimum": 0
+							},
+							"step": {
+								"title": "Index Step",
+								"type": "number",
+								"minimum": 1,
+								"default": 1
+							}
+						},
+						"required": [
+							"stop"
+						],
+						"default": {
+							"stop": 10
+						},
+						"additionalProperties": false
+					},
+					"timer": {
+						"title": "Timer",
+						"$ref": "#/$defs/integerOrVariable"
+					},
+					"amount": {
+						"title": "Amount",
+						"$ref": "#/$defs/integerOrVariable"
+					},
+					"quota": {
+						"title": "Quota",
+						"$ref": "#/$defs/integerOrVariable"
+					}
+				},
+				"required": [
+					"filename"
+				],
+				"default": {
+					"filename": ".png"
+				}
+			},
+			"minItems": 1
+		}
+	},
+	"required": [
+		"root_dir",
+		"items"
+	],
+	"additionalProperties": false,
+	"$defs": {
+		"integerOrVariable": {
+			"title": "Integer or Variable",
+			"oneOf": [
+				{
+					"type": "integer",
+					"minimum": 0
+				},
+				{
+					"type": "string",
+					"enum": [
+						"range"
+					]
+				}
+			]
+		}
+	}
+}
