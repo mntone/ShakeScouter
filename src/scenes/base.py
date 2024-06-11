@@ -35,6 +35,10 @@ class SceneContext:
 		raise NotImplementedError()
 
 class Scene:
+	@property
+	def session(self) -> str:
+		raise NotImplementedError()
+
 	def setup(self) -> Any:
 		return None
 

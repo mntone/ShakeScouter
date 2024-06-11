@@ -4,12 +4,13 @@
 from anyio import sleep_forever, TASK_STATUS_IGNORED
 from anyio.abc import TaskGroup, TaskStatus
 from json import dumps
+from typing import Any
 from websockets import broadcast, serve, WebSocketServerProtocol
 
 from outputs.base import Output
 
 class WebSocketOutput(Output):
-	def __init__(self, args) -> None:
+	def __init__(self, args: Any) -> None:
 		self.__connections = set()
 		self.__host = args.host
 		self.__port = args.port

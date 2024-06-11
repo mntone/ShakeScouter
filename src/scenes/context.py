@@ -3,13 +3,14 @@
 
 from anyio.streams.memory import MemoryObjectSendStream
 from copy import deepcopy
+from nanoid import generate
 from time import time
 from typing import Any, Optional
 
 from scenes.base import SceneContext, SceneEvent
 
 class SceneContextImpl(SceneContext):
-	EXCLUDE_KEYS = set(['event', 'timestamp'])
+	EXCLUDE_KEYS = set(['session', 'event', 'timestamp'])
 
 	def __init__(self, streams: list[MemoryObjectSendStream[Any]] = []) -> None:
 		self.__cache: dict[SceneEvent, dict[str, Any]] = {}
@@ -19,12 +20,21 @@ class SceneContextImpl(SceneContext):
 		for stream in self.__streams:
 			stream.close()
 
+	def __newSession(self) -> str:
+		self.__session = generate()
+		return self.__session
+
+	@property
+	def session(self) -> str:
+		return self.__session
+
 	async def __send(self, message: dict[str, Any]) -> None:
 		for stream in self.__streams:
 			await stream.send(message)
 
 	async def sendImmediately(self, event: SceneEvent, message: Optional[dict[str, Any]] = None) -> None:
 		eventMessage = {
+			'session': self.__newSession() if event == SceneEvent.MATCHMAKING else self.session,
 			'event': event.value,
 			'timestamp': time(),
 		}
@@ -50,6 +60,7 @@ class SceneContextImpl(SceneContext):
 				return
 
 		eventMessage = {
+			'session': self.__newSession() if event == SceneEvent.MATCHMAKING else self.session,
 			'event': event.value,
 			'timestamp': time(),
 		}
