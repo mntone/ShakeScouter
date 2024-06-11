@@ -6,6 +6,7 @@ import numpy as np
 
 from abc import abstractmethod
 from enum import Enum
+from numpy.typing import NDArray
 from typing import Any, Optional
 
 from constants import env
@@ -45,7 +46,11 @@ class Scene:
 		raise NotImplementedError()
 
 	@staticmethod
-	def loadTemplate(templateName: str) -> np.ndarray:
-		tmpPath = env.TEMPLATE_PATH.format(templateName)
-		tmpImage = cv.imread(tmpPath, cv.IMREAD_GRAYSCALE)
-		return tmpImage
+	def loadTemplate(templateName: str) -> NDArray[np.uint8]:
+		filepath = env.TEMPLATE_PATH.format(templateName)
+		image = cv.imread(filepath, cv.IMREAD_GRAYSCALE)
+		if image is None:
+			raise TypeError(f'Image is not found: {filepath}')
+		if image.dtype != np.uint8:
+			raise TypeError(f'Image type is not np.uint8')
+		return image.astype(np.uint8)

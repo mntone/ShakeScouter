@@ -5,21 +5,20 @@ from typing import Any
 
 from constants import screen
 from scenes.base import *
-from utils.images import calcSimilarity, Frame
-
-# Correlation Param
-START_THRESHOLD = 0.9
+from utils.images import errorMAE, Frame
 
 class MatchmakingScene(Scene):
+	MIN_ERROR = 0.1
+
 	def __init__(self) -> None:
 		self.__startTemplate = Scene.loadTemplate('start')
 
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
 		# Detect "Start"
 		startImage = frame.apply(screen.MESSAGE_PART)
-		startSim = calcSimilarity(startImage, self.__startTemplate)
+		startError = errorMAE(startImage, self.__startTemplate)
 
-		if startSim < START_THRESHOLD:
+		if startError > MatchmakingScene.MIN_ERROR:
 			return SceneStatus.FALSE
 
 		# Send message

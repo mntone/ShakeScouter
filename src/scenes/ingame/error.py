@@ -5,21 +5,20 @@ from typing import Any
 
 from constants import screen
 from scenes.base import *
-from utils.images import calcSimilarity, Frame
-
-# Correlation Param
-ERROR_THRESHOLD = 0.9
+from utils.images import errorMAE, Frame
 
 class ErrorScene(Scene):
+	MIN_ERROR = 0.05
+
 	def __init__(self) -> None:
 		self.__errorTemplate = Scene.loadTemplate('error')
 
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
 		# Detect error message
 		errorImage = frame.apply(screen.ERROR_PART)
-		errorSim = calcSimilarity(errorImage, self.__errorTemplate)
+		errorError = errorMAE(errorImage, self.__errorTemplate)
 
-		if errorSim < ERROR_THRESHOLD:
+		if errorError > ErrorScene.MIN_ERROR:
 			return SceneStatus.FALSE
 
 		# Send message

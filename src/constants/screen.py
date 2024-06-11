@@ -3,6 +3,8 @@
 
 import numpy as np
 
+from numpy.typing import NDArray
+
 from utils.images.filters import *
 from utils.images.model import PartInfo, RectF
 
@@ -95,6 +97,9 @@ WAVE_PART = PartInfo(
 		),
 	],
 )
+
+def removeNumberAreaFromWaveImage(waveImage: NDArray[np.uint8]) -> NDArray[np.uint8]:
+	return waveImage[:, :-72]
 
 # Timer Counter in Game
 TIMER_PART = PartInfo(

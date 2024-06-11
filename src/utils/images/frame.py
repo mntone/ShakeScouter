@@ -6,12 +6,13 @@ import numpy as np
 
 from functools import reduce
 from math import ceil, floor
+from numpy.typing import NDArray
 
 from utils.images.model import PartInfo, RectF
 from utils.images.filters.filter import Filter
 
 class Frame:
-	__image: np.ndarray
+	__image: NDArray[np.uint8]
 
 	def __init__(self, **kwargs) -> None:
 		if 'raw' in kwargs:
@@ -20,30 +21,31 @@ class Frame:
 			image = cv.imread(kwargs['filepath'], cv.IMREAD_ANYCOLOR)
 			if image is None:
 				raise TypeError(f'Image is not found: {kwargs['filepath']}')
-
-			self.__image = image
+			if image.dtype != np.uint8:
+				raise TypeError(f'Image type is not np.uint8')
+			self.__image = image.astype(np.uint8)
 		else:
 			raise TypeError('At least the "raw" or "filepath" is required')
 
 	@property
-	def native(self) -> np.ndarray:
+	def native(self) -> NDArray[np.uint8]:
 		return self.__image
 
-	def apply(self, partInfo: PartInfo) -> np.ndarray:
+	def apply(self, partInfo: PartInfo) -> NDArray[np.uint8]:
 		subimage = self.__subimage(partInfo['area'])
 		filtered = Frame.__filter(subimage, partInfo['filters'])
 		return filtered
 
-	def filter(self, filters: list[Filter]) -> np.ndarray:
+	def filter(self, filters: list[Filter]) -> NDArray[np.uint8]:
 		image = Frame.__filter(self.__image, filters)
 		return image
 
-	def subimage(self, rect: RectF):
+	def subimage(self, rect: RectF) -> 'Frame':
 		subimage = self.__subimage(rect)
 		newFrame = Frame(raw=subimage)
 		return newFrame
 
-	def __subimage(self, rect: RectF) -> np.ndarray:
+	def __subimage(self, rect: RectF) -> NDArray[np.uint8]:
 		if rect['left'] < 0 or rect['left'] > 1:
 			raise ValueError('"rect[\'left\']" must be between 0 and 1')
 		if rect['top'] < 0 or rect['top'] > 1:
@@ -63,10 +65,10 @@ class Frame:
 		subimage = image[top:bottom, left:right]
 		return subimage
 
-	def update(self, raw: np.ndarray):
+	def update(self, raw: NDArray[np.uint8]):
 		self.__image = raw
 
 	@staticmethod
-	def __filter(src: np.ndarray, filters: list[Filter]) -> np.ndarray:
+	def __filter(src: NDArray[np.uint8], filters: list[Filter]) -> NDArray[np.uint8]:
 		dst = reduce(lambda i, f: f.apply(i), filters, src)
 		return dst

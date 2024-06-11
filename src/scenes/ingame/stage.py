@@ -5,38 +5,30 @@ from typing import Any
 
 from constants import assets, screen
 from scenes.base import *
-from utils.images import calcSimilarity, Frame, getMaxSimilarityKey
-
-# Correlation Param
-LOGO_THRESHOLD = 0.8
-NAME_THRESHOLD = 0.8
+from utils.images import errorMAE, Frame, getMinErrorKey
 
 class StageScene(Scene):
+	MIN_ERROR = 0.1
+
 	def __init__(self) -> None:
 		self.__logoTemplate = Scene.loadTemplate('logo')
-
-		stageTemplates = {
+		self.__stageTemplates = {
 			key: Scene.loadTemplate(f'stages/{key}')
 			for key in assets.stageKeys
-		}
-		self.__stageTemplates = {
-			k: v
-			for k, v in stageTemplates.items()
-			if v is not None
 		}
 
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
 		logoImage = frame.apply(screen.LOGO_PART)
-		logoSim = calcSimilarity(logoImage, self.__logoTemplate)
+		logoError = errorMAE(logoImage, self.__logoTemplate)
 
-		if logoSim < LOGO_THRESHOLD:
+		if logoError > StageScene.MIN_ERROR:
 			return SceneStatus.FALSE
 
 		stageImage = frame.apply(screen.STAGE_NAME_PART)
-		stageKey = getMaxSimilarityKey(
+		stageKey = getMinErrorKey(
 			stageImage,
 			self.__stageTemplates,
-			threshold=NAME_THRESHOLD
+			minError=StageScene.MIN_ERROR,
 		)
 
 		if stageKey is None:

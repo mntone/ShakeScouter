@@ -5,29 +5,23 @@ from typing import Any
 
 from constants import assets, screen
 from scenes.base import *
-from utils.images import Frame, getMaxSimilarityKey
-
-# Correlation Param
-KING_THRESHOLD = 0.8
+from utils.images import Frame, getMinErrorKey
 
 class KingScene(Scene):
+	MIN_ERROR = 0.1
+
 	def __init__(self) -> None:
-		kingTemplates = {
+		self.__kingTemplates = {
 			key: Scene.loadTemplate(f'kings/{key}')
 			for key in assets.kingKeys
-		}
-		self.__kingTemplates = {
-			k: v
-			for k, v in kingTemplates.items()
-			if v is not None
 		}
 
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
 		kingImage = frame.apply(screen.KING_NAME_PART)
-		kingKey = getMaxSimilarityKey(
+		kingKey = getMinErrorKey(
 			kingImage,
 			self.__kingTemplates,
-			threshold=KING_THRESHOLD
+			minError=KingScene.MIN_ERROR,
 		)
 
 		if kingKey is None:

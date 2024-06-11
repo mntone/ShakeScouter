@@ -6,12 +6,11 @@ from typing import Any
 from constants import screen
 from recognizers.digit import DigitReader
 from scenes.base import *
-from utils.images import calcSimilarity, Frame
-
-# Correlation Param
-GRIZZ_THRESHOLD = 0.9
+from utils.images import errorMAE, Frame
 
 class ResultScene(Scene):
+	MIN_ERROR = 0.1
+
 	def __init__(self, reader: DigitReader) -> None:
 		self.__reader = reader
 		self.__mrgrizzTemplate = Scene.loadTemplate('mrgrizz')
@@ -19,9 +18,9 @@ class ResultScene(Scene):
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
 		# Detect "Mr. Grizz"
 		grizzImage = frame.apply(screen.GRIZZ_PART)
-		grizzSim = calcSimilarity(grizzImage, self.__mrgrizzTemplate)
+		grizzError = errorMAE(grizzImage, self.__mrgrizzTemplate)
 
-		if grizzSim < GRIZZ_THRESHOLD:
+		if grizzError > ResultScene.MIN_ERROR:
 			return SceneStatus.FALSE
 
 		# Read "golden"

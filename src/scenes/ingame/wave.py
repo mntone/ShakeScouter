@@ -9,15 +9,14 @@ from typing import Any
 from constants import Color, screen
 from recognizers.digit import DigitReader
 from scenes.base import *
-from utils.images import calcSimilarity, Frame
+from utils.images import errorMAE, Frame
 
 # Correlation Param
-WAVE_THRESHOLD     = 0.9
-UNSTABLE_THRESHOLD = 0.9
-
 ALIVE_THRESHOLD = 0.8 * 255
 
 class WaveScene(Scene):
+	MIN_ERROR = 0.1
+
 	def __init__(self, reader: DigitReader) -> None:
 		self.__reader           = reader
 		self.__waveTemplate     = Scene.loadTemplate('wave')
@@ -44,12 +43,13 @@ class WaveScene(Scene):
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
 		# Detect "Wave"
 		waveImage = frame.apply(screen.WAVE_PART)
-		waveSim = calcSimilarity(waveImage, self.__waveTemplate)
+		waveTextImage = screen.removeNumberAreaFromWaveImage(waveImage)
+		waveError = errorMAE(waveTextImage, self.__waveTemplate)
 
-		if waveSim < WAVE_THRESHOLD:
-			waveExSim = calcSimilarity(waveImage, self.__waveExTemplate)
+		if waveError > WaveScene.MIN_ERROR:
+			waveExError = errorMAE(waveImage, self.__waveExTemplate)
 
-			if waveExSim < WAVE_THRESHOLD:
+			if waveExError > WaveScene.MIN_ERROR:
 				data['wave'] = -1
 				data['quota'] = -1
 				return SceneStatus.FALSE
@@ -104,8 +104,8 @@ class WaveScene(Scene):
 
 		# Get unstable status
 		unstableImage = frame.apply(screen.UNSTABLE_PART)
-		unstableSim = calcSimilarity(unstableImage, self.__unstableTemplate)
-		data['unstable'] = bool(unstableSim >= UNSTABLE_THRESHOLD)
+		unstableError = errorMAE(unstableImage, self.__unstableTemplate)
+		data['unstable'] = bool(unstableError <= WaveScene.MIN_ERROR)
 
 		# Send message
 		transformedData = WaveScene.__transformData(data)
