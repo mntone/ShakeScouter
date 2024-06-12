@@ -3,6 +3,7 @@
 
 import cv2 as cv
 
+from anyio import sleep
 from logging import getLogger
 from typing import Awaitable, Callable
 
@@ -38,6 +39,7 @@ class CVInput(Input):
 					result = await callback(frame)
 					if result:
 						break
+					await sleep(0)
 				else:
 					break
 

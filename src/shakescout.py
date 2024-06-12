@@ -4,7 +4,7 @@
 # Copyright (C) 2024 mntone
 # Licensed under the GPLv3 license.
 
-from anyio import create_task_group, create_memory_object_stream, run, from_thread, to_thread
+from anyio import create_task_group, create_memory_object_stream, run
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from os import getenv
@@ -49,10 +49,10 @@ async def main(args):
 			return result == SceneStatus.DONE
 
 		# Start input
-		await to_thread.run_sync(lambda: from_thread.run(input.run, callback))
-
-		# Stop outputs
-		tg.cancel_scope.cancel()
+		async def run():
+			await input.run(callback)
+			tg.cancel_scope.cancel()
+		tg.start_soon(run)
 
 if __name__ == "__main__":
 	parser = ArgumentParser()
