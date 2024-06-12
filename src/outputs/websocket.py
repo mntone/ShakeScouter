@@ -12,6 +12,7 @@ from outputs.base import Output
 class WebSocketOutput(Output):
 	def __init__(self, args: Any) -> None:
 		self.__connections = set()
+		self.__dev  = args.development
 		self.__host = args.host
 		self.__port = args.port
 
@@ -19,11 +20,17 @@ class WebSocketOutput(Output):
 		await tg.start(self.__runLoop)
 
 	async def __onConnected(self, websocket: WebSocketServerProtocol):
+		if self.__dev:
+			print(f'Connect websocket client:', websocket.id)
+
 		self.__connections.add(websocket)
 		try:
 			await websocket.wait_closed()
 		finally:
 			self.__connections.remove(websocket)
+
+			if self.__dev:
+				print(f'Disconnect websocket client:', websocket.id)
 
 	async def __runLoop(self, task_status: TaskStatus[None] = TASK_STATUS_IGNORED):
 		async with serve(self.__onConnected, self.__host, self.__port):
