@@ -90,4 +90,7 @@ if __name__ == "__main__":
 		envPort = getenv('WS_PORT')
 		args.port = int(envPort) if envPort else 4649
 
+	args.sslCert = getenv('WS_SSLCERT')
+	args.sslKey = getenv('WS_SSLKEY')
+
 	run(main, args)

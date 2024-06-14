@@ -4,6 +4,7 @@
 from anyio import sleep_forever, TASK_STATUS_IGNORED
 from anyio.abc import TaskGroup, TaskStatus
 from json import dumps
+from ssl import PROTOCOL_TLS_SERVER, SSLContext
 from typing import Any
 from websockets import broadcast, serve, WebSocketServerProtocol
 
@@ -15,6 +16,12 @@ class WebSocketOutput(Output):
 		self.__dev  = args.development
 		self.__host = args.host
 		self.__port = args.port
+
+		if args.sslCert is not None and args.sslKey is not None:
+			sslContext = SSLContext(PROTOCOL_TLS_SERVER)
+			sslContext.load_cert_chain(args.sslCert, args.sslKey)
+			self.__sslContext = sslContext
+			print(f'Use ssl for WebSocket:', args.sslCert)
 
 	async def setup(self, tg: TaskGroup):
 		await tg.start(self.__runLoop)
@@ -33,7 +40,7 @@ class WebSocketOutput(Output):
 				print(f'Disconnect websocket client:', websocket.id)
 
 	async def __runLoop(self, task_status: TaskStatus[None] = TASK_STATUS_IGNORED):
-		async with serve(self.__onConnected, self.__host, self.__port):
+		async with serve(self.__onConnected, self.__host, self.__port, ssl=self.__sslContext):
 			task_status.started()
 			await sleep_forever()
 
