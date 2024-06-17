@@ -1,9 +1,10 @@
 # Copyright (C) 2024 mntone
 # Licensed under the GPLv3 license.
 
-from .console import *
-from .json import *
-from .websocket import *
+from .base import Output
+from .console import ConsoleOutput
+from .json import JsonOutput
+from .websocket import WebSocketOutput
 
 OUTPUT_PLUGINS_KEYLIST = {
 	'console': 'ConsoleOutput',

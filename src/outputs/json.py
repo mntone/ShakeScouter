@@ -10,11 +10,11 @@ from outputs.base import Output
 from scenes.base import SceneEvent
 
 class JsonOutput(Output):
-	TIMESTAMP_FILENAME = 'telemetry_%Y%m%d-%H%M'
+	TIMESTAMP_FILENAME = 'match_%Y%m%d-%H%M'
 
 	def __init__(self, args: Any) -> None:
 		self.__curPath = None
-		self.__useTimestampFilename = args.useTimestampFilename == True
+		self.__useTimestampFilename = args.timestamp
 
 	async def setup(self, _):
 		pass

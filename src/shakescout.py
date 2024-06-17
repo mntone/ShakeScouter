@@ -65,6 +65,9 @@ if __name__ == "__main__":
 	parser.add_argument('--width', type=int, default=1920, choices=range(640, 8192), metavar='WIDTH', help='Specify the width of the OpenCV input.')
 	parser.add_argument('--height', type=int, default=1080, choices=range(360, 4320), metavar='HEIGHT', help='Specify the height of the OpenCV input.')
 
+	# JsonOutput options
+	parser.add_argument('-t', '--timestamp', action='store_true', help='Use timestamp as json filename.')
+
 	# WebSocketOutput options
 	parser.add_argument('-H', '--host', type=str, metavar='HOST', help='Specify the hostname for the WebSocket connection.')
 	parser.add_argument('-p', '--port', type=int, choices=range(1024, 65536), metavar='PORT', help='Specify the port number for the WebSocket connection.')

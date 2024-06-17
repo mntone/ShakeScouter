@@ -12,7 +12,8 @@
 			"console": "integratedTerminal",
 			"cwd": "${fileDirname}",
 			"args": [
-				"--development"
+				"--development",
+				"-t"
 			]
 		},
 		{
@@ -27,6 +28,7 @@
 				"console",
 				"json",
 				"websocket",
+				"-t",
 				"-H",
 				"${input:hostname}",
 				"-p",
