@@ -92,7 +92,7 @@ WAVE_PART = PartInfo(
 	filters = [
 		HSV(),
 		InRange(
-			lower=np.array([  0,   0, 217]),  # V=90%
+			lower=np.array([  0,   0, 245]),  # V=96%
 			upper=np.array([180,  51, 255]),
 		),
 	],
