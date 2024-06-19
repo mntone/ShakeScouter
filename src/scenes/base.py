@@ -13,6 +13,8 @@ from constants import env
 from utils.images import Frame
 
 class SceneEvent(Enum):
+	DEV_COMMENT = 'dev_comment'
+	DEV_WARN    = 'dev_warn'
 	MATCHMAKING = 'matchmaking'
 	GAME_STAGE  = 'game_stage'
 	GAME_KING   = 'game_king'
@@ -26,6 +28,17 @@ class SceneStatus(Enum):
 	CONTINUE = 2
 
 class SceneContext:
+	@property
+	def session(self) -> str:
+		raise NotImplementedError()
+
+	@property
+	def timestamp(self) -> float:
+		raise NotImplementedError()
+
+	def updateTimestamp(self) -> float:
+		raise NotImplementedError()
+
 	@abstractmethod
 	async def sendImmediately(self, event: SceneEvent, message: Optional[dict[str, Any]] = None) -> None:
 		raise NotImplementedError()
@@ -35,14 +48,10 @@ class SceneContext:
 		raise NotImplementedError()
 
 class Scene:
-	@property
-	def session(self) -> str:
-		raise NotImplementedError()
-
 	def setup(self) -> Any:
 		return None
 
-	def reset(self, data: Any):
+	def reset(self, data: Any) -> None:
 		pass
 
 	@abstractmethod

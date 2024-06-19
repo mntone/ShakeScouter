@@ -13,7 +13,7 @@ class Sequential(Scene):
 	def setup(self) -> Any:
 		data = {
 			'index': 0,
-			'children':  [c.setup() for c in self.__children],
+			'children': [c.setup() for c in self.__children],
 		}
 		return data
 

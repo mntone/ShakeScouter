@@ -15,6 +15,7 @@ class SceneContextImpl(SceneContext):
 	def __init__(self, streams: list[MemoryObjectSendStream[Any]] = []) -> None:
 		self.__cache: dict[SceneEvent, dict[str, Any]] = {}
 		self.__streams = streams
+		self.__timestamp = time()
 
 	def __del__(self) -> None:
 		for stream in self.__streams:
@@ -28,6 +29,14 @@ class SceneContextImpl(SceneContext):
 	def session(self) -> str:
 		return self.__session
 
+	@property
+	def timestamp(self) -> float:
+		return self.__timestamp
+
+	def updateTimestamp(self) -> float:
+		self.__timestamp = time()
+		return self.__timestamp
+
 	async def __send(self, message: dict[str, Any]) -> None:
 		for stream in self.__streams:
 			await stream.send(message)
@@ -36,7 +45,7 @@ class SceneContextImpl(SceneContext):
 		eventMessage = {
 			'session': self.__newSession() if event == SceneEvent.MATCHMAKING else self.session,
 			'event': event.value,
-			'timestamp': time(),
+			'timestamp': self.__timestamp,
 		}
 
 		if message is not None:
@@ -63,7 +72,7 @@ class SceneContextImpl(SceneContext):
 		eventMessage = {
 			'session': self.__newSession() if event == SceneEvent.MATCHMAKING else self.session,
 			'event': event.value,
-			'timestamp': time(),
+			'timestamp': self.__timestamp,
 		}
 
 		# Set additional field

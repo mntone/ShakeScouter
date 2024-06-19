@@ -19,6 +19,9 @@ class Root(Scene):
 		self.__child.reset(data)
 
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
+		# Update timestamp
+		context.updateTimestamp()
+
 		# Analysis frame
 		result = await self.__child.analysis(context, data, frame)
 

@@ -10,7 +10,8 @@ from scenes.context import SceneContext, SceneEvent
 class TestSceneContext(SceneContext):
 	def __init__(self) -> None:
 		self.__message = None
-		self.__session = str(time())
+		self.__timestamp = time()
+		self.__session = str(self.__timestamp)
 
 	def __newSession(self) -> str:
 		self.__session = str(time())
@@ -19,6 +20,14 @@ class TestSceneContext(SceneContext):
 	@property
 	def session(self) -> str:
 		return self.__session
+
+	@property
+	def timestamp(self) -> float:
+		return self.__timestamp
+
+	def updateTimestamp(self) -> float:
+		self.__timestamp = time()
+		return self.__timestamp
 
 	async def sendImmediately(self, event: SceneEvent, message: Optional[dict[str, Any]] = None) -> None:
 		eventMessage = {

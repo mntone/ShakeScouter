@@ -45,6 +45,9 @@ class WebSocketOutput(Output):
 			await sleep_forever()
 
 	def __sendMessage(self, message: Output.Message):
+		if not self.__dev and message['event'].startswith('dev_'):
+			return
+
 		jsonMessage = dumps(message)
 		broadcast(self.__connections, jsonMessage)
 

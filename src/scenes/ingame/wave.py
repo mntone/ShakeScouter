@@ -9,6 +9,8 @@ from typing import Any
 from constants import Color, screen
 from recognizers.digit import DigitReader
 from scenes.base import *
+from scenes.base import SceneContext
+from utils.anomaly import CounterAnomalyDetector
 from utils.images import errorMAE, Frame
 
 # Correlation Param
@@ -25,10 +27,30 @@ class WaveScene(Scene):
 
 	def setup(self) -> Any:
 		data = {
+			'end': -1,
+			'wave': 0,
 			'color': None,
 			'quota': -1,
+			'detector': CounterAnomalyDetector(),
 		}
 		return data
+
+	def reset(self, data: Any) -> None:
+		data['end']   = -1
+		data['wave']  = 0
+		data['color'] = None
+		data['quota'] = -1
+		data['detector'].reset()
+
+	async def __detectAnomalousCount(self, context: SceneContext, data: Any, count: Optional[int]) -> None:
+		if count is not None:
+			if not data['detector'].isAnomalous(count, context.timestamp):
+				# Calc estimated end timestamp
+				data['end'] = context.timestamp + (100 - count)
+			else:
+				await context.sendImmediately(SceneEvent.DEV_WARN, {
+					'description': f'Anomalous value detected: {count}',
+				})
 
 	def __analysisCount(self, frame: Frame) -> Optional[int]:
 		# Read "count"
@@ -63,14 +85,25 @@ class WaveScene(Scene):
 
 		return unstableStatus
 
-	async def __analysisXtrawave(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
-		if data['quota'] != -1:
-			data['quota'] = -1
+	async def __analysisXtrawave(self, context: SceneContext, data: Any, frame: Frame, waveImage: Optional[NDArray[np.uint8]] = None) -> SceneStatus:
+		if context.timestamp >= data['end']:
+			if waveImage is None:
+				waveImage = frame.apply(screen.WAVE_PART)
+			waveExError = errorMAE(waveImage, self.__waveExTemplate)
+
+			if waveExError > WaveScene.MIN_ERROR:
+				return SceneStatus.FALSE
+			else:
+				data['wave']  = 'extra'
+				data['quota'] = -1
 
 		# Read each part
 		count    = self.__analysisCount(frame)
 		players  = self.__analysisPlayerStatus(data, frame)
 		unstable = self.__analysisUnstable(frame)
+
+		# Detect anomalous count
+		await self.__detectAnomalousCount(context, data, count)
 
 		# Send message
 		message = {
@@ -80,60 +113,65 @@ class WaveScene(Scene):
 			'players': players,
 			'unstable': unstable,
 		}
-		await context.sendImmediately(SceneEvent.GAME_UPDATE, message)
+		await context.send(SceneEvent.GAME_UPDATE, message)
 
 		return SceneStatus.CONTINUE
 
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
-		# Detect "Wave"
-		waveImage = frame.apply(screen.WAVE_PART)
-		waveTextImage = screen.removeNumberAreaFromWaveImage(waveImage)
-		waveError = errorMAE(waveTextImage, self.__waveTemplate)
+		# In "Xtrawave"
+		if data['wave'] == 'extra':
+			result = await self.__analysisXtrawave(context, data, frame)
+			return result
 
-		if waveError > WaveScene.MIN_ERROR:
-			waveExError = errorMAE(waveImage, self.__waveExTemplate)
+		if context.timestamp >= data['end']:
+			# Detect "Wave"
+			waveImage = frame.apply(screen.WAVE_PART)
+			waveTextImage = screen.removeNumberAreaFromWaveImage(waveImage)
+			waveError = errorMAE(waveTextImage, self.__waveTemplate)
 
-			if waveExError > WaveScene.MIN_ERROR:
+			if waveError > WaveScene.MIN_ERROR:
 				data['quota'] = -1
-				return SceneStatus.FALSE
 
-			else:
-				# In "Xtrawave"
-				result = await self.__analysisXtrawave(context, data, frame)
-
+				# Check "Xtrawave"
+				result = await self.__analysisXtrawave(context, data, frame, waveImage)
 				return result
 
-		# Read "wave"
-		waveNumberImage = waveImage[:, self.__waveTemplate.shape[1]:]
-		waveNumberInt = self.__reader.read(waveNumberImage)
+			# Read "wave"
+			waveNumberImage = waveImage[:, self.__waveTemplate.shape[1]:]
+			waveNumberInt = self.__reader.read(waveNumberImage)
+			if waveNumberInt is not None:
+				data['wave'] = waveNumberInt
 
-		# Read "amount"
-		amountImage = frame.apply(screen.AMOUNT_PART)
-		amountInt = self.__reader.read(amountImage)
-
-		if data['quota'] == -1:
 			# Read "quota"
 			quotaImage = frame.apply(screen.QUOTA_PART)
 			quotaInt = self.__reader.read(quotaImage)
 			if quotaInt is not None:
 				data['quota'] = quotaInt
 
+		# Read "amount"
+		amountImage = frame.apply(screen.AMOUNT_PART)
+		amountInt = self.__reader.read(amountImage)
+
 		# Read each part
 		count    = self.__analysisCount(frame)
 		players  = self.__analysisPlayerStatus(data, frame)
 		unstable = self.__analysisUnstable(frame)
 
-		# Send message
-		message = {
-			'color': data['color'].value.name,
-			'wave': waveNumberInt,
-			'count': count,
-			'amount': amountInt,
-			'quota': data['quota'],
-			'players': players,
-			'unstable': unstable,
-		}
-		await context.sendImmediately(SceneEvent.GAME_UPDATE, message)
+		# Detect anomalous count
+		await self.__detectAnomalousCount(context, data, count)
+
+		# Send message if any of count or amount is not None
+		if any([count, amountInt]):
+			message = {
+				'color': data['color'].value.name,
+				'wave': data['wave'],
+				'count': count,
+				'amount': amountInt,
+				'quota': data['quota'],
+				'players': players,
+				'unstable': unstable,
+			}
+			await context.send(SceneEvent.GAME_UPDATE, message)
 
 		return SceneStatus.CONTINUE
 
