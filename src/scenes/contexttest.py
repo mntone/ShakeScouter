@@ -10,6 +10,7 @@ from scenes.context import SceneContext, SceneEvent
 class TestSceneContext(SceneContext):
 	def __init__(self) -> None:
 		self.__message = None
+		self.__session = str(time())
 
 	def __newSession(self) -> str:
 		self.__session = str(time())
@@ -31,7 +32,7 @@ class TestSceneContext(SceneContext):
 			for key, val in message.items():
 				eventMessage[key] = deepcopy(val)
 
-		self.__message = message
+		self.__message = eventMessage
 
 	async def send(self, event: SceneEvent, message: dict[str, Any]) -> None:
 		await self.sendImmediately(event, message)
