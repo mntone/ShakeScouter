@@ -1,4 +1,4 @@
-[日本語](//github.com/mntone/ShakeScouter/blob/main/README.md)
+English | [日本語](//github.com/mntone/ShakeScouter/blob/main/README.md)
 
 # ShakeScouter
 
@@ -46,6 +46,7 @@ py shakescout.py [options]
 - `-i`, `--input`: Specify the device ID of the OpenCV input.
 - `--width`: Specify the width of the OpenCV input.
 - `--hight`: Specify the height of the OpenCV input.
+- `-t`, `--timestamp`: Use timestamp as json filename.
 - `-H`, `--host`: Specify the hostname for the WebSocket connection.
 - `-p`, `--port`: Specify the port number for the WebSocket connection.
 
@@ -56,6 +57,12 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 ## License
 
 This project is licensed under the GPLv3 license - see the [LICENSE](//github.com/mntone/ShakeScouter/blob/main/LICENSE) file for details.
+
+## Contact
+
+If you have any questions or need support, please contact me.
+
+- Mastodon: https://mstdn.jp/@mntone
 
 ## Acknowledgments
 

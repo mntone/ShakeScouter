@@ -1,4 +1,4 @@
-[English](//github.com/mntone/ShakeScouter/blob/main/README-en.md)
+[English](//github.com/mntone/ShakeScouter/blob/main/README-en.md) | 日本語
 
 # ShakeScouter
 
@@ -46,6 +46,7 @@ py shakescout.py [options]
 - `-i`, `--input`: OpenCV入力のカメラ入力デバイスIDを指定します。
 - `--width`: OpenCV入力のカメラ入力の幅を指定します。
 - `--hight`: OpenCV入力のカメラ入力の高さを指定します。
+- `-t`, `--timestamp`: JSONファイル名に日時を使用します。
 - `-H`, `--host`: WebSocket接続で使用するホスト名を指定します。
 - `-p`, `--port`: WebSocket接続で使用するポート番号を指定します。
 
@@ -56,6 +57,12 @@ py shakescout.py [options]
 ## ライセンス
 
 このプロジェクトは GPLv3 ライセンスの下で認可されています。詳細については [LICENSE](//github.com/mntone/ShakeScouter/blob/main/LICENSE) ファイルを参照してください。
+
+## 連絡先
+
+質問やサポートが必要な場合は、私に連絡してください。
+
+- Mastodon: https://mstdn.jp/@mntone
 
 ## 謝辞
 
