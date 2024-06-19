@@ -9,12 +9,12 @@ from utils.images import Frame
 class Drop(Scene):
 	def __init__(self, child: Scene, rate: float = 1) -> None:
 		self.__child = child
-		self.__drop  = int(60.0 / rate) # TODO: Don't hardcode at 60fps
+		self.__diff  = 1 / rate
 
 	def setup(self) -> Any:
 		data = {
 			'cache': SceneStatus.FALSE,
-			'drop':  self.__drop,
+			'next':  0,
 
 			'child': self.__child.setup(),
 		}
@@ -22,19 +22,14 @@ class Drop(Scene):
 
 	def reset(self, data: Any) -> None:
 		data['cache'] = SceneStatus.FALSE
-		data['drop']  = self.__drop
+		data['next']  = 0
 		self.__child.reset(data['child'])
 
 	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
-		drop = data['drop']
+		next = data['next']
 
-		if self.__drop <= drop:
-			drop = 0
+		if context.timestamp >= next:
 			data['cache'] = await self.__child.analysis(context, data['child'], frame)
-		else:
-			drop = drop + 1
-
-		# Store "drop" to context
-		data['drop'] = drop
+			data['next']  = context.timestamp + self.__diff
 
 		return data['cache']

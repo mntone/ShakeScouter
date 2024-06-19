@@ -21,25 +21,22 @@ def getCorePipeline(dev: str) -> Scene:
 			(1, su.Parallel([
 				su.Drop(
 					WaveScene(reader),
-					rate=2.5,
+					rate=2,
 				),
 				su.Drop(
 					KingScene(),
 					rate=0.5,
 				),
 			])),
-			(2, su.Parallel(
-				[
-					su.Drop(
+			(2, su.Drop(
+				su.Parallel(
+					[
 						ResultScene(reader),
-						rate=1,
-					),
-					su.Drop(
 						ErrorScene(),
-						rate=2,
-					),
-				],
-				anyDone=True,
+					],
+					anyDone=True,
+				),
+				rate=1,
 			)),
 		])
 	return pipeline
