@@ -30,7 +30,8 @@ class TestSceneContext(SceneContext):
 		if message is not None:
 			# Set additional field
 			for key, val in message.items():
-				eventMessage[key] = deepcopy(val)
+				if val is not None:
+					eventMessage[key] = deepcopy(val)
 
 		self.__message = eventMessage
 

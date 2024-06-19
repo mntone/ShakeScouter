@@ -25,69 +25,19 @@ class WaveScene(Scene):
 
 	def setup(self) -> Any:
 		data = {
-			'color':  None,
-			'wave':   -1,
-			'count':  100,
-			'amount': -1,
-			'quota':  -1,
-			'players': [
-				dict(alive=True),
-				dict(alive=True),
-				dict(alive=True),
-				dict(alive=True),
-			],
-			'unstable': False,
+			'color': None,
+			'quota': -1,
 		}
 		return data
 
-	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
-		# Detect "Wave"
-		waveImage = frame.apply(screen.WAVE_PART)
-		waveTextImage = screen.removeNumberAreaFromWaveImage(waveImage)
-		waveError = errorMAE(waveTextImage, self.__waveTemplate)
-
-		if waveError > WaveScene.MIN_ERROR:
-			waveExError = errorMAE(waveImage, self.__waveExTemplate)
-
-			if waveExError > WaveScene.MIN_ERROR:
-				data['wave'] = -1
-				data['quota'] = -1
-				return SceneStatus.FALSE
-
-			else:
-				if data['wave'] != 'extra':
-					# Set "extra" wave
-					data['wave'] = 'extra'
-					data['amount'] = -1
-					data['quota'] = -1
-
-		else:
-			# Read "wave"
-			waveNumberImage = waveImage[:, self.__waveTemplate.shape[1]:]
-			waveNumberInt = self.__reader.read(waveNumberImage)
-			if waveNumberInt is not None:
-				data['wave'] = waveNumberInt
-
+	def __analysisCount(self, frame: Frame) -> Optional[int]:
 		# Read "count"
 		timerImage = frame.apply(screen.TIMER_PART)
 		timerInt = self.__reader.read(timerImage)
-		if timerInt is not None:
-			data['count'] = timerInt
 
-		if data['wave'] != 'extra':
-			# Read "amount"
-			amountImage = frame.apply(screen.AMOUNT_PART)
-			amountInt = self.__reader.read(amountImage)
-			if amountInt is not None:
-				data['amount'] = amountInt
+		return timerInt
 
-			if data['quota'] == -1:
-				# Read "quota"
-				quotaImage = frame.apply(screen.QUOTA_PART)
-				quotaInt = self.__reader.read(quotaImage)
-				if quotaInt is not None:
-					data['quota'] = quotaInt
-
+	def __analysisPlayerStatus(self, data: Any, frame: Frame):
 		# Get player subimage
 		playerImage = WaveScene.__applyPlayerPostFilter(frame.apply(screen.PLAYERS_PART))
 
@@ -99,17 +49,91 @@ class WaveScene(Scene):
 		# Get player status
 		maskFilter = screen.getPlayerFilter(color.hueA)
 		playerMask = Frame(raw=playerImage).filter(maskFilter)
-		for i in range(4):
-			data['players'][i]['alive'] = WaveScene.__getAliveStatus(playerMask, i)
+		playerStatus = list(map(lambda i: {
+			'alive': WaveScene.__getAliveStatus(playerMask, i)
+		}, range(4)))
 
+		return playerStatus
+
+	def __analysisUnstable(self, frame: Frame):
 		# Get unstable status
 		unstableImage = frame.apply(screen.UNSTABLE_PART)
 		unstableError = errorMAE(unstableImage, self.__unstableTemplate)
-		data['unstable'] = bool(unstableError <= WaveScene.MIN_ERROR)
+		unstableStatus = bool(unstableError <= WaveScene.MIN_ERROR)
+
+		return unstableStatus
+
+	async def __analysisXtrawave(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
+		if data['quota'] != -1:
+			data['quota'] = -1
+
+		# Read each part
+		count    = self.__analysisCount(frame)
+		players  = self.__analysisPlayerStatus(data, frame)
+		unstable = self.__analysisUnstable(frame)
 
 		# Send message
-		transformedData = WaveScene.__transformData(data)
-		await context.send(SceneEvent.GAME_UPDATE, transformedData)
+		message = {
+			'color': data['color'].value.name,
+			'wave': 'extra',
+			'count': count,
+			'players': players,
+			'unstable': unstable,
+		}
+		await context.sendImmediately(SceneEvent.GAME_UPDATE, message)
+
+		return SceneStatus.CONTINUE
+
+	async def analysis(self, context: SceneContext, data: Any, frame: Frame) -> SceneStatus:
+		# Detect "Wave"
+		waveImage = frame.apply(screen.WAVE_PART)
+		waveTextImage = screen.removeNumberAreaFromWaveImage(waveImage)
+		waveError = errorMAE(waveTextImage, self.__waveTemplate)
+
+		if waveError > WaveScene.MIN_ERROR:
+			waveExError = errorMAE(waveImage, self.__waveExTemplate)
+
+			if waveExError > WaveScene.MIN_ERROR:
+				data['quota'] = -1
+				return SceneStatus.FALSE
+
+			else:
+				# In "Xtrawave"
+				result = await self.__analysisXtrawave(context, data, frame)
+
+				return result
+
+		# Read "wave"
+		waveNumberImage = waveImage[:, self.__waveTemplate.shape[1]:]
+		waveNumberInt = self.__reader.read(waveNumberImage)
+
+		# Read "amount"
+		amountImage = frame.apply(screen.AMOUNT_PART)
+		amountInt = self.__reader.read(amountImage)
+
+		if data['quota'] == -1:
+			# Read "quota"
+			quotaImage = frame.apply(screen.QUOTA_PART)
+			quotaInt = self.__reader.read(quotaImage)
+			if quotaInt is not None:
+				data['quota'] = quotaInt
+
+		# Read each part
+		count    = self.__analysisCount(frame)
+		players  = self.__analysisPlayerStatus(data, frame)
+		unstable = self.__analysisUnstable(frame)
+
+		# Send message
+		message = {
+			'color': data['color'].value.name,
+			'wave': waveNumberInt,
+			'count': count,
+			'amount': amountInt,
+			'quota': data['quota'],
+			'players': players,
+			'unstable': unstable,
+		}
+		await context.sendImmediately(SceneEvent.GAME_UPDATE, message)
 
 		return SceneStatus.CONTINUE
 
@@ -158,13 +182,3 @@ class WaveScene(Scene):
 		pixelCount = cv.countNonZero(subimage)
 
 		return pixelCount > 0
-
-	@staticmethod
-	def __transformData(data: Any) -> dict[str, Any]:
-		ret = {}
-		for key, value in data.items():
-			if key == 'color':
-				ret[key] = value.value.name
-			else:
-				ret[key] = value
-		return ret
