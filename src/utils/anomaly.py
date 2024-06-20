@@ -35,7 +35,7 @@ class CounterAnomalyDetector:
 			case CounterAnomalyDetector.STATE_COUNTDOWN:
 				diffValue = self.__prevValue - value
 				diffTimestamp = ceil(0.25 + timestamp - self.__prevTimestamp)
-				if diffValue > diffTimestamp:
+				if diffValue < 0 or diffValue > diffTimestamp:
 					return True
 
 				if value <= 0 or value >= 1000:
