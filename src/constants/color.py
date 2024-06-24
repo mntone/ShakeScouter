@@ -14,12 +14,13 @@ class ColorData:
 	hueA: float
 
 class Color(Enum):
-	DEFAULT = ColorData(
-		'default',
-		np.array([ 49,  84, 201]),
-		np.array([ 75, 100,   3]),
-		6.91,
-	)
+	# Use training mode only
+	# DEFAULT = ColorData(
+	# 	'default',
+	# 	np.array([ 49,  84, 201]),
+	# 	np.array([ 75, 100,   3]),
+	# 	6.91,
+	# )
 	BLUE = ColorData(
 		'blue',
 		np.array([243,  91,  67]),

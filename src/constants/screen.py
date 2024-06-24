@@ -152,23 +152,15 @@ QUOTA_PART = PartInfo(
 # Players in game
 PLAYERS_PART = PartInfo(
 	area = RectF(
-		left   =  49 / 1920,
-		top    = 170 / 1080,
-		right  = 341 / 1920,
-		bottom = 260 / 1080,
+		left   =  54 / 1920,
+		top    = 172 / 1080,
+		right  = 337 / 1920,
+		bottom = 257 / 1080,
 	),
 	filters = [
-		Blur((7, 7)),
 		HSV(),
 	],
 )
-
-def getPlayerFilter(hue: float) -> list[Filter]:
-	filter = InRange(
-		lower=np.array([hue - 2, 127, 204]),  # S=50% V=80%
-		upper=np.array([hue + 2, 255, 255]),
-	)
-	return [filter]
 
 # Signal in Game
 SIGNAL_PART = PartInfo(
